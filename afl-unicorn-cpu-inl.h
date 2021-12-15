@@ -155,33 +155,19 @@ static void afl_setup(struct uc_struct* uc) {
   if (id_str) {
 
     shm_id = atoi(id_str);
-    r_cov = atoi(cov_r);
     uc->afl_area_ptr = shmat(shm_id, NULL, 0);
-    uc->afl_cov = r_cov;
-    if (r_cov==1)
+    uc->afl_cov = atoi(cov_r);;
+    
+    if (uc->afl_cov==1)
     {
       char *str_id = getenv(SHM_ENV_VAR2);
 
-      char *tmout_r = getenv("AFL_COVERAGE_TMOUT");
 
       id_shm = atoi(str_id);
-      r_tmout = atoi(tmout_r);
       uc->shm_ptr = shmat(id_shm, NULL, 0);
-      uc->afl_cov = r_cov;
-
-      size_t dbl_sizeD = sizeof(ht);
-      uc->addrs = (ht *) shmalloc(0, &dbl_sizeD, uc->shm_ptr, MAX_MEM,false,-1, uc);
-      size_t dbl_sizeDl = sizeof(unsigned long long)*20;
-      size_t dbl_sizeHt = sizeof(ht_original);
-      ht_original *tmp;
-      int qq=0;
+      start_coverage(uc);
 
      
-      
-      uc->afl_tmout = r_tmout;
-      uc->addrs->last = last;
-      uc->addrs->time = time(NULL);
-      uc->addrs->id=0;
     }
 
     uc->afl_prev_loc = 0;

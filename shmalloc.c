@@ -100,6 +100,7 @@ void *shmalloc(int id, size_t *size, void *shmptr, size_t shm_size, bool new, in
         curr->prev = ptr2offset(first, shmptr);
         first->index = -1;
         printf("96\n");
+        uc->last = curr;
 
         return (first + 1);
     }

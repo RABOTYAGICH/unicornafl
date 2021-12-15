@@ -100,7 +100,6 @@ static void qemu_tcg_cpu_loop(struct uc_struct *uc)
     CPUState *cpu = uc->cpu;
 
     //qemu_tcg_init_cpu_signals();
-    printf("^^^^^^^^^^^^^6\n");
     cpu->created = true;
 
     while (1) {
@@ -126,7 +125,6 @@ static int tcg_cpu_exec(struct uc_struct *uc, CPUArchState *env)
 static bool tcg_exec_all(struct uc_struct* uc)
 {
     int r;
-    bool finish = false;
     printf(">>> got STOP request!!!\n");
 
     while (!uc->exit_request) {
@@ -145,7 +143,6 @@ static bool tcg_exec_all(struct uc_struct* uc)
                 uc->stop_request = false;
             } else if (uc->stop_request) {
                 printf(">>> got STOP request!!!\n");
-                finish = true;
                 break;
             }
 
@@ -154,7 +151,6 @@ static bool tcg_exec_all(struct uc_struct* uc)
                 // printf(">>> invalid memory accessed, STOP = %u!!!\n", env->invalid_error);
                 uc->invalid_addr = env->invalid_addr;
                 uc->invalid_error = env->invalid_error;
-                finish = true;
                 break;
             }
 
@@ -164,44 +160,14 @@ static bool tcg_exec_all(struct uc_struct* uc)
                 break;
             }
             if (r == EXCP_HLT) {
-                if (uc->afl_cov==1)
-                {
-                    /* code */
-                
-                
-                    time_t now = time(NULL);
-                    if (now-uc->addrs->time>=uc->afl_tmout)
-                    {
-                        FILE* file;
-                        char *tmout_r = getenv("AFL_COVDIR");
-                        file = fopen(tmout_r, "w");    
-                        if (file != -1) 
-                        {
-                            for (size_t i = 0; i < 65536; i++)
-                            {
-                                if(uc->addrs->entries[i].count>0){
-                                    printf("SHOWING: hash %d %d\n", i, uc->addrs->entries[i].count);
-                                    for (size_t j = 0; j < uc->addrs->entries[i].count; j++)
-                                    {
-                                        fprintf(file,"0x%llx\n", uc->addrs->entries[i].addrs[j]);
-
-                                    }
-                                    
-                                }
-                            }
-                        }
-                        uc->addrs->time = time(NULL);
-                        printf(">>> %s\n", tmout_r); 
-                    }
-                }
-                
+                coverage_output(uc);
+               
                 
                 printf(">>> got HLT!!!\n");
                 printf("HLT: \n");
                 
                 
 
-                finish = true;
                 break;
             }
         } else if (cpu->stop || cpu->stopped) {
@@ -211,7 +177,6 @@ static bool tcg_exec_all(struct uc_struct* uc)
     }
     uc->exit_request = 0;
 
-    return finish;
 }
 
 static bool cpu_can_run(CPUState *cpu)

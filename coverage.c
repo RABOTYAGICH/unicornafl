@@ -47,3 +47,54 @@ void coverage_handler(struct uc_struct* uc, int afl_idx)
     }
   }
 }
+
+void start_coverage(struct uc_struct* uc)
+{
+   
+
+
+
+    char *tmout_r = getenv("AFL_COVERAGE_TMOUT");
+
+    uc->afl_tmout = atoi(tmout_r);;
+
+    size_t dbl_sizeD = sizeof(ht);
+    uc->addrs = (ht *) shmalloc(0, &dbl_sizeD, uc->shm_ptr, MAX_MEM,false,-1, uc);
+
+
+    uc->addrs->time = time(NULL);
+
+    }
+
+void coverage_output(struct uc_struct* uc)
+{
+    if (uc->afl_cov==1)
+    {
+                    /* code */
+                
+                
+        time_t now = time(NULL);
+        if (now-uc->addrs->time>=uc->afl_tmout)
+        {
+            FILE* file;
+            char *tmout_r = getenv("AFL_COVDIR");
+            file = fopen(tmout_r, "w");    
+            if (file != -1) 
+            {
+                for (size_t i = 0; i < 65536; i++)
+                {
+                    if(uc->addrs->entries[i].count>0){
+                        for (size_t j = 0; j < uc->addrs->entries[i].count; j++)
+                        {
+                            fprintf(file,"0x%llx\n", uc->addrs->entries[i].addrs[j]);
+
+                        }
+                        
+                    }
+                }
+            }
+            uc->addrs->time = time(NULL);
+            printf(">>> %s\n", tmout_r); 
+        }
+    }
+}
