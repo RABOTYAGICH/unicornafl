@@ -88,25 +88,18 @@ void *shmalloc(int id, size_t *size, void *shmptr, size_t shm_size, bool new, in
   
         curr = (Header *)((char *)shmptr + sizeof(Header) + *size);
 
-       
-       
-
         initialize_header(curr, free_size - (*size), -1, 0);
-        printf("86\n");
 
         first->next = ptr2offset(curr, shmptr);
-        printf("87\n");
 
         curr->prev = ptr2offset(first, shmptr);
-        first->index = -1;
-        printf("96\n");
+        first->index = index;
         uc->last = curr;
 
         return (first + 1);
     }
     else
     {
-        printf("177\n");
         //Lock shared memory
         pthread_mutex_lock(&(first->mutex));
 
@@ -127,7 +120,6 @@ void *shmalloc(int id, size_t *size, void *shmptr, size_t shm_size, bool new, in
             }
             if (uc->last!=NULL)
             {
-                printf("LAST NOT NULL\n");
                 best_block_size = uc->last->size;
                 best_fit = uc->last;
                 break;
@@ -170,11 +162,9 @@ void *shmalloc(int id, size_t *size, void *shmptr, size_t shm_size, bool new, in
         best_fit->index = index;
         one = free_size - (best_fit->size*2);
 
-        printf("free_size: %d, best_fit->size: %d\n", free_size,best_fit->size);
 
         two = best_fit->size;
         //Check if there is enough room to make another header
-        printf("one: %d, two: %d\n", one,two);
         if(one > two)
         {
             curr = (Header *) ((char *) best_fit + best_fit->size + sizeof(Header));
@@ -190,7 +180,6 @@ void *shmalloc(int id, size_t *size, void *shmptr, size_t shm_size, bool new, in
 
         }
         else {
-            printf("OUT OF MEMORY\n");
             pthread_mutex_unlock(&(first->mutex));
             uc->last = best_fit;
 

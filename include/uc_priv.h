@@ -9,6 +9,7 @@
 #include "unicorn/platform.h"
 #include <stdio.h>
 #include <pthread.h>
+#include <sys/shm.h>
 
 #include "qemu.h"
 #include "unicorn/unicorn.h"

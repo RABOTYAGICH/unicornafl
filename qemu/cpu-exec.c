@@ -349,7 +349,6 @@ int cpu_exec(struct uc_struct *uc, CPUArchState *env)
     else
 #endif
         tb_flush(env);
-    printf("DONE123\n");
     /* fail safe : never use cpu outside cpu_exec() */
     // uc->cpu = NULL;
 

@@ -125,7 +125,6 @@ static int tcg_cpu_exec(struct uc_struct *uc, CPUArchState *env)
 static bool tcg_exec_all(struct uc_struct* uc)
 {
     int r;
-    printf(">>> got STOP request!!!\n");
 
     while (!uc->exit_request) {
         CPUState *cpu = uc->cpu;

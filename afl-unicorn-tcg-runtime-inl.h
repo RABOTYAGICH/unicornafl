@@ -35,14 +35,10 @@
 #include "shmalloc.h"
 #include "coverage.h"
 
-#define SHM_ID 7
-#define MAX_MEM 29572904
-#define ARR_SIZE 16
-#define BITSEQ 536870911
+
 /* This is the main instrumentation function, patched in at translate.
    cur_loc has already been shifted in afl-unicorn-translate-inl.h at this point. 
    Also this helper will only be emitted if running instrumented. */
-int qq;
 
 
 

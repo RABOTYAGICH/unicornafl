@@ -40,6 +40,79 @@ void coverage_handler(struct uc_struct* uc, int afl_idx)
             {
                 uc->addrs->entries[afl_idx] = ret;
             }
+             else  
+            { 
+                void *buf;
+                void *shm_tmp;
+
+                Header *first, *curr_new;
+                int shm_id;
+                uc->size_next += MAX_MEM;
+                if ((shm_id = shmget(IPC_PRIVATE, uc->size_next, 0777 | IPC_CREAT | IPC_EXCL)) == -1) {
+                    printf("errno %d\n",errno );
+
+                    fprintf(stderr, "Failed to get a shared memory segment.\n");
+                    exit(EXIT_FAILURE);
+                }
+
+
+                if ((shm_tmp = shmat(shm_id, NULL, 0)) == (void *) -1) {
+                            printf("errno %d\n",errno );
+
+                    fprintf(stderr, "Failed to attach to our shared memory segment.\n");
+                    exit(EXIT_FAILURE);
+                }
+                memcpy(shm_tmp,uc->shm_ptr, uc->cur_size);
+                uc->cur_size+=MAX_MEM;
+                first = curr_new = (Header *) shm_tmp;
+
+                curr_new = (Header *) offset2ptr(curr_new->next, shm_tmp);
+                
+
+                uc->addrs = (ht *)(first+1);
+
+                ht_original temp = {0};
+                ht_original *TMP, *TMPP;
+                void* buff;
+                
+                do
+                {
+                    TMP = (curr_new+1);
+                    if (TMP->next==NULL)
+                    {
+                        uc->addrs->entries[curr_new->index].next = TMP;
+                    }
+                    else
+                    {
+                        temp = uc->addrs->entries[curr_new->index];
+
+                        TMPP = uc->addrs->entries[curr_new->index].next;
+                        temp.next = TMP;
+                        temp.next->next = TMPP;
+                        uc->addrs->entries[curr_new->index] = temp;
+                    }
+                   
+                    curr_new = (Header *) offset2ptr(curr_new->next, shm_tmp);
+                } while (curr_new!=NULL&&curr_new->next!=-1);
+                    
+                
+               
+                
+                buf = uc->shm_ptr;
+                uc->shm_ptr = shm_tmp;
+                ret = addEntry(uc->addrs->entries[afl_idx],uc, true,afl_idx);
+
+                if (ret.next != NULL) 
+                {
+                    uc->addrs->entries[afl_idx] = ret;
+                    shmdt(buf);
+                }
+                else
+                {
+                    fprintf(stderr, "Failed to get a shared memory segment.\n");
+                    exit(EXIT_FAILURE);
+                }
+            }
         }
         uc->addrs->entries[afl_idx].addrs[uc->addrs->entries[afl_idx].count] = uc->address;  //uc->addrs->entries[65535].original.addrs[0]
         uc->addrs->entries[afl_idx].count+=1;
@@ -53,7 +126,6 @@ void start_coverage(struct uc_struct* uc)
    
 
 
-    printf("qqq");
     char *tmout_r = getenv("AFL_COVERAGE_TMOUT");
 
     uc->afl_tmout = atoi(tmout_r);;
@@ -64,7 +136,7 @@ void start_coverage(struct uc_struct* uc)
 
     uc->addrs->time = time(NULL);
 
-    }
+}
 
 void coverage_output(struct uc_struct* uc)
 {
@@ -94,7 +166,6 @@ void coverage_output(struct uc_struct* uc)
                 }
             }
             uc->addrs->time = time(NULL);
-            printf(">>> %s\n", tmout_r); 
         }
     }
 }
