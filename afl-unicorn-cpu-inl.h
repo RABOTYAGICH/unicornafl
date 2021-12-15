@@ -35,6 +35,9 @@
 #include <sys/wait.h>
 #include <unicorn.h>
 #include "config.h"
+#include "shmalloc.h"
+#include "coverage.h"
+
 #include "types.h"
 #include "afl-unicorn-common.h"
 
@@ -46,6 +49,7 @@
 /* Copied from aflpp/types.h to talk to forkserver */
 #define FS_OPT_ENABLED 0x80000001
 #define FS_OPT_SHDMEM_FUZZ 0x01000000
+static struct Header* last;
 
 /**
  * The correct fds for reading and writing pipes
@@ -79,6 +83,7 @@ struct afl_tsl {
 #endif
 
 };
+static struct Header* last;
 
 /* Current state, as forwarded from forkserver child to parent */
 
@@ -103,15 +108,32 @@ static int wifsignaled;
 
 /* Set up SHM region and initialize other stuff. */
 
+
+
+/*
+ * Frees an object in shared memory
+ */
+
+
+
+
+
+
+
+
 static void afl_setup(struct uc_struct* uc) {
 
   char *id_str = getenv(SHM_ENV_VAR);
+  char *cov_r = getenv("AFL_COVERAGE");
+
   char *inst_r = getenv("AFL_INST_RATIO");
 
+  uc->id_sh=1;
   // A value we can use to tell AFL our persistent mode found a crash
   wifsignaled = afl_find_wifsignaled_id();
 
-  int shm_id;
+  int shm_id, id_shm, r_tmout;
+  bool r_cov;
 
   if (inst_r) {
 
@@ -133,7 +155,35 @@ static void afl_setup(struct uc_struct* uc) {
   if (id_str) {
 
     shm_id = atoi(id_str);
+    r_cov = atoi(cov_r);
     uc->afl_area_ptr = shmat(shm_id, NULL, 0);
+    uc->afl_cov = r_cov;
+    if (r_cov==1)
+    {
+      char *str_id = getenv(SHM_ENV_VAR2);
+
+      char *tmout_r = getenv("AFL_COVERAGE_TMOUT");
+
+      id_shm = atoi(str_id);
+      r_tmout = atoi(tmout_r);
+      uc->shm_ptr = shmat(id_shm, NULL, 0);
+      uc->afl_cov = r_cov;
+
+      size_t dbl_sizeD = sizeof(ht);
+      uc->addrs = (ht *) shmalloc(0, &dbl_sizeD, uc->shm_ptr, MAX_MEM,false,-1, uc);
+      size_t dbl_sizeDl = sizeof(unsigned long long)*20;
+      size_t dbl_sizeHt = sizeof(ht_original);
+      ht_original *tmp;
+      int qq=0;
+
+     
+      
+      uc->afl_tmout = r_tmout;
+      uc->addrs->last = last;
+      uc->addrs->time = time(NULL);
+      uc->addrs->id=0;
+    }
+
     uc->afl_prev_loc = 0;
     uc->afl_area_ptr[0] = 1;
 

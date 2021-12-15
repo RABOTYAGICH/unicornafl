@@ -39,7 +39,6 @@
 #else
 #define afl_gen_compcov(a,b,c,d,e,f) do {} while (0)
 #endif
-
 #define PREFIX_REPZ   0x01
 #define PREFIX_REPNZ  0x02
 #define PREFIX_LOCK   0x04
@@ -8604,6 +8603,7 @@ void optimize_flags_init(struct uc_struct *uc)
                 reg_names[i]);
     }
 }
+char name[] = "qweere";
 
 /* generate intermediate code in gen_opc_buf and gen_opparam_buf for
    basic block 'tb'. If search_pc is TRUE, also generate PC
@@ -8678,7 +8678,13 @@ static inline void gen_intermediate_code_internal(uint8_t *gen_opc_cc_op,
 #endif
 
     if (!env->uc->init_tcg)
+    {
         tcg_ctx->cpu_T[0] = g_malloc0(sizeof(TCGv));
+        
+    }
+    
+    
+   
     *(TCGv *)tcg_ctx->cpu_T[0] = tcg_temp_new(tcg_ctx);
 
     if (!env->uc->init_tcg)
@@ -8759,6 +8765,8 @@ static inline void gen_intermediate_code_internal(uint8_t *gen_opc_cc_op,
 #if defined(UNICORN_AFL)
     /* Generate instrumentation for AFL. */
     afl_gen_maybe_log(env->uc->tcg_ctx, tb->pc);
+
+
 #endif
 
     gen_tb_start(tcg_ctx);

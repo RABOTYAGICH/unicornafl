@@ -30,7 +30,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "unicorn/platform.h"
-
+#include <inttypes.h>
 #include "config.h"
 
 #include "qemu-common.h"
@@ -209,7 +209,6 @@ static int cpu_gen_code(CPUArchState *env, TranslationBlock *tb, int *gen_code_s
     ti = profile_getclock();
 #endif
     tcg_func_start(s);
-
     gen_intermediate_code(env, tb);
 
     // Unicorn: when tracing block, patch block size operand for callback
@@ -1185,6 +1184,7 @@ void tb_invalidate_phys_range(struct uc_struct *uc, tb_page_addr_t start, tb_pag
                               int is_cpu_write_access)
 {
     while (start < end) {
+        //end: %llu\n", start, end);
         tb_invalidate_phys_page_range(uc, start, end, is_cpu_write_access);
         start &= TARGET_PAGE_MASK;
         start += TARGET_PAGE_SIZE;

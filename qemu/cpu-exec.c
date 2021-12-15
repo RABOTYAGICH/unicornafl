@@ -349,7 +349,7 @@ int cpu_exec(struct uc_struct *uc, CPUArchState *env)
     else
 #endif
         tb_flush(env);
-
+    printf("DONE123\n");
     /* fail safe : never use cpu outside cpu_exec() */
     // uc->cpu = NULL;
 
@@ -449,6 +449,7 @@ not_found:
 #if defined(AFL_DEBUG)
     printf("[d] translating 0x%llx...\n", (unsigned long long) pc);
 #endif
+
     /* if no translated code available, then translate it now */
     tb = tb_gen_code(cpu, pc, cs_base, (int)flags, 0);
     if (tb == NULL) {
@@ -491,6 +492,8 @@ static TranslationBlock *tb_find_fast(CPUArchState *env)
     tb = cpu->tb_jmp_cache[tb_jmp_cache_hash_func(pc)];
     if (unlikely(!tb || tb->pc != pc || tb->cs_base != cs_base ||
                 tb->flags != flags)) {
+            printf("tb_find_slow\n");
+
         tb = tb_find_slow(env, pc, cs_base, flags);
     }
     return tb;

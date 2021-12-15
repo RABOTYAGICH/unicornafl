@@ -130,7 +130,7 @@ ifneq (,$(findstring sparc,$(UNICORN_ARCHS)))
 	UNICORN_TARGETS += sparc-softmmu,sparc64-softmmu,
 endif
 
-UC_OBJ_ALL = $(UC_TARGET_OBJ) list.o uc.o afl.o
+UC_OBJ_ALL = $(UC_TARGET_OBJ) list.o uc.o afl.o shmalloc.o coverage.o
 
 UNICORN_CFLAGS += -fPIC
 
@@ -290,7 +290,8 @@ else
 PKGCFGDIR ?= $(LIBDATADIR)/pkgconfig
 endif
 
-$(LIBNAME)_LDFLAGS += -lm
+$(LIBNAME)_LDFLAGS += -lm -Wl,-V
+
 
 .PHONY: test fuzz bindings clean FORCE
 
@@ -307,8 +308,10 @@ afl.o: qemu/config-host.mak FORCE
 
 uc.o: qemu/config-host.mak FORCE
 	$(MAKE) -C qemu $(SMP_MFLAGS)
+shmalloc.0: qemu/config-host.mak FORCE
+	$(MAKE) -C qemu $(SMP_MFLAGS)
 
-$(UC_TARGET_OBJ) list.o: uc.o afl.o
+$(UC_TARGET_OBJ) list.o: uc.o afl.o shmalloc.0
 	@echo "--- $^ $@" > /dev/null
 
 unicorn: $(LIBRARY) $(ARCHIVE)

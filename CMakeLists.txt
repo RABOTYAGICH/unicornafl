@@ -280,6 +280,8 @@ add_library(x86_64-softmmu
     qemu/cpu-exec.c
     qemu/cpus.c
     qemu/cputlb.c
+    qemu/shmalloc.c
+
     qemu/exec.c
     qemu/fpu/softfloat.c
     qemu/hw/i386/pc.c
@@ -303,6 +305,7 @@ add_library(x86_64-softmmu
     qemu/tcg/optimize.c
     qemu/tcg/tcg.c
     qemu/translate-all.c
+    shmalloc.c
 )
 if (NOT UNICORN_BUILD_SHARED)
     target_link_libraries(x86_64-softmmu unicorn)
@@ -329,6 +332,7 @@ if (UNICORN_HAS_ARM)
 add_library(arm-softmmu
     qemu/cpu-exec.c
     qemu/cpus.c
+    qemu/shmalloc.c
     qemu/cputlb.c
     qemu/exec.c
     qemu/fpu/softfloat.c
@@ -371,6 +375,8 @@ endif()
 add_library(armeb-softmmu
     qemu/cpu-exec.c
     qemu/cpus.c
+    qemu/shmalloc.c
+
     qemu/cputlb.c
     qemu/exec.c
     qemu/fpu/softfloat.c
@@ -415,6 +421,8 @@ if (UNICORN_HAS_AARCH64)
 add_library(aarch64-softmmu
     qemu/cpu-exec.c
     qemu/cpus.c
+    qemu/shmalloc.c
+
     qemu/cputlb.c
     qemu/exec.c
     qemu/fpu/softfloat.c
@@ -875,6 +883,7 @@ set(UNICORN_SRCS_COMMON
     qemu/vl.c
     uc.c
     afl.c
+    shmalloc.c
 )
 
 if (MSVC)

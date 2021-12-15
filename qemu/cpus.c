@@ -29,8 +29,9 @@
 #include "sysemu/sysemu.h"
 #include "sysemu/cpus.h"
 #include "qemu/thread.h"
-
+#include <time.h>
 #include "exec/address-spaces.h"	// debug, can be removed later
+#include "../coverage.h"
 
 #include "uc_priv.h"
 
@@ -99,7 +100,7 @@ static void qemu_tcg_cpu_loop(struct uc_struct *uc)
     CPUState *cpu = uc->cpu;
 
     //qemu_tcg_init_cpu_signals();
-
+    printf("^^^^^^^^^^^^^6\n");
     cpu->created = true;
 
     while (1) {
@@ -126,6 +127,8 @@ static bool tcg_exec_all(struct uc_struct* uc)
 {
     int r;
     bool finish = false;
+    printf(">>> got STOP request!!!\n");
+
     while (!uc->exit_request) {
         CPUState *cpu = uc->cpu;
         CPUArchState *env = cpu->env_ptr;
@@ -141,7 +144,7 @@ static bool tcg_exec_all(struct uc_struct* uc)
                 // reset stop_request
                 uc->stop_request = false;
             } else if (uc->stop_request) {
-                //printf(">>> got STOP request!!!\n");
+                printf(">>> got STOP request!!!\n");
                 finish = true;
                 break;
             }
@@ -155,18 +158,54 @@ static bool tcg_exec_all(struct uc_struct* uc)
                 break;
             }
 
-            // printf(">>> stop with r = %x, HLT=%x\n", r, EXCP_HLT);
+            printf(">>> stop with r = %x, HLT=%x\n", r, EXCP_HLT);
             if (r == EXCP_DEBUG) {
                 cpu_handle_guest_debug(cpu);
                 break;
             }
             if (r == EXCP_HLT) {
-                //printf(">>> got HLT!!!\n");
+                if (uc->afl_cov==1)
+                {
+                    /* code */
+                
+                
+                    time_t now = time(NULL);
+                    if (now-uc->addrs->time>=uc->afl_tmout)
+                    {
+                        FILE* file;
+                        char *tmout_r = getenv("AFL_COVDIR");
+                        file = fopen(tmout_r, "w");    
+                        if (file != -1) 
+                        {
+                            for (size_t i = 0; i < 65536; i++)
+                            {
+                                if(uc->addrs->entries[i].count>0){
+                                    printf("SHOWING: hash %d %d\n", i, uc->addrs->entries[i].count);
+                                    for (size_t j = 0; j < uc->addrs->entries[i].count; j++)
+                                    {
+                                        fprintf(file,"0x%llx\n", uc->addrs->entries[i].addrs[j]);
+
+                                    }
+                                    
+                                }
+                            }
+                        }
+                        uc->addrs->time = time(NULL);
+                        printf(">>> %s\n", tmout_r); 
+                    }
+                }
+                
+                
+                printf(">>> got HLT!!!\n");
+                printf("HLT: \n");
+                
+                
+
                 finish = true;
                 break;
             }
         } else if (cpu->stop || cpu->stopped) {
-            // printf(">>> got stopped!!!\n");
+            printf(">>> got stopped!!!\n");
             break;
         }
     }

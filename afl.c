@@ -76,6 +76,9 @@ static bool uc_afl_enable_shm_testcases(uc_engine *uc) {
     if (id_str) {
         int shm_id = atoi(id_str);
         char *map = (char *)shmat(shm_id, NULL, 0);
+        
+        printf("uc_afl_enable_shm_testcases 80 %s\n", id_str);
+
         if (!map || map == (void *)-1) {
             perror("[!] could not access fuzzing shared memory");
             exit(1);
@@ -254,6 +257,7 @@ uc_afl_ret uc_afl_fuzz(
         printf("[d] uc->afl_testcase_ptr = %p, len = %d\n", uc->afl_testcase_ptr, *uc->afl_testcase_size_p);
     }
 #endif
+    uc->address=0;
 
     // 0 means never stop child in persistence mode.
     uint32_t i;

@@ -32,10 +32,26 @@
 
 #include "uc_priv.h"
 #include "afl-unicorn-common.h"
+#include "shmalloc.h"
+#include "coverage.h"
 
+#define SHM_ID 7
+#define MAX_MEM 29572904
+#define ARR_SIZE 16
+#define BITSEQ 536870911
 /* This is the main instrumentation function, patched in at translate.
    cur_loc has already been shifted in afl-unicorn-translate-inl.h at this point. 
    Also this helper will only be emitted if running instrumented. */
+int qq;
+
+
+
+
+
+/*
+ * Frees an object in shared memory
+ */
+
 
 void HELPER(afl_maybe_log)(void* uc_ptr, uint64_t cur_loc) {
 
@@ -43,12 +59,9 @@ void HELPER(afl_maybe_log)(void* uc_ptr, uint64_t cur_loc) {
   u8* afl_area_ptr = uc->afl_area_ptr; // Don't remove, it's used by INC_AFL_AREA implicitly;
 
   register uintptr_t afl_idx = cur_loc ^ uc->afl_prev_loc;
+  coverage_handler(uc,afl_idx);
 
   INC_AFL_AREA(afl_idx);
-
-#if defined(AFL_DEBUG)
-  printf("[d] At loc 0x%llx: prev: 0x%llx, afl_idx: %lu, map[afl_idx]: %d\n", (unsigned long long) cur_loc, (unsigned long long) uc->afl_prev_loc, (unsigned long) afl_idx, afl_area_ptr[afl_idx]);
-#endif
 
   uc->afl_prev_loc = cur_loc >> 1;
 

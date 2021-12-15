@@ -11326,6 +11326,7 @@ static inline void gen_intermediate_code_internal(ARMCPU *cpu,
 #if defined(UNICORN_AFL)
     /* Generate instrumentation for AFL. */
     afl_gen_maybe_log(env->uc->tcg_ctx, tb->pc);
+    
 #endif
 
     gen_tb_start(tcg_ctx);

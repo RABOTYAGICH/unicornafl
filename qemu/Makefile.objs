@@ -6,6 +6,9 @@ common-obj-y += hw/
 common-obj-y += vl.o qemu-timer.o
 common-obj-y += ../uc.o ../list.o glib_compat.o
 common-obj-y += ../afl.o
+common-obj-y += ../shmalloc.o
+common-obj-y += ../coverage.o
+
 common-obj-y += qemu-log.o
 common-obj-y += tcg-runtime.o
 common-obj-y += qom/

@@ -8,6 +8,7 @@
 
 #include "unicorn/platform.h"
 #include <stdio.h>
+#include <pthread.h>
 
 #include "qemu.h"
 #include "unicorn/unicorn.h"
@@ -35,6 +36,9 @@
 #define WRITE_WORD(x, w) (x = (x & ~0xffff) | (w & 0xffff))
 #define WRITE_BYTE_H(x, b) (x = (x & ~0xff00) | ((b & 0xff) << 8))
 #define WRITE_BYTE_L(x, b) (x = (x & ~0xff) | (b & 0xff))
+
+
+
 
 
 typedef uc_err (*query_t)(struct uc_struct *uc, uc_query_type type, size_t *result);
@@ -147,6 +151,10 @@ static inline bool _hook_exists_bounded(struct list_item *cur, uint64_t addr)
 
 typedef struct TCGContext TCGContext;
 
+typedef struct ht ht;
+
+typedef struct ht_original ht_original;
+
 struct uc_struct {
     uc_arch arch;
     uc_mode mode;
@@ -174,7 +182,8 @@ struct uc_struct {
     uc_mem_redirect_t mem_redirect;
     uc_cpus_init cpus_init;
     CPUState *cpu;
-
+    ht* addrs;
+    
     uc_insn_hook_validate insn_hook_validate;
 
     MemoryRegion *system_memory;    // qemu/exec.c
@@ -234,6 +243,15 @@ struct uc_struct {
     struct list saved_contexts; // The contexts saved by this uc_struct.
 
 #ifdef UNICORN_AFL
+    unsigned long long address;
+
+    int afl_tmout;
+    bool afl_cov;
+    void *shm_ptr;
+    int id_sh;
+    int size_next;
+    int cur_size;
+    struct Header* last;
     uc_args_int_uc_t afl_forkserver_start; // function to start afl forkserver
     uc_afl_ret_uc_bool_t afl_child_request_next; // function from child to ask for new testcase (if in child)
     int afl_child_pipe[2]; // pipe used to send information from child process to forkserver
@@ -261,6 +279,20 @@ struct uc_context {
 
 // check if this address is mapped in (via uc_mem_map())
 MemoryRegion *memory_mapping(struct uc_struct* uc, uint64_t address);
+
+
+
+
+/**
+ * A header for managing memory.
+ */
+
+
+
+/**
+ * Initializes values in header
+ */
+
 
 #endif
 /* vim: set ts=4 noet:  */
