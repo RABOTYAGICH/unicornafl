@@ -53,7 +53,7 @@ void start_coverage(struct uc_struct* uc)
    
 
 
-
+    printf("qqq");
     char *tmout_r = getenv("AFL_COVERAGE_TMOUT");
 
     uc->afl_tmout = atoi(tmout_r);;
