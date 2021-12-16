@@ -18,7 +18,6 @@ ht_original addEntry(ht_original entry, struct uc_struct* uc, bool ovf, int inde
 
     *tmp = entry;
    
-   // (Header*)((void*)tmp-0x60)index = 3;
     ret.next = tmp;
     return ret;
 
@@ -91,24 +90,9 @@ void coverage_handler(struct uc_struct* uc, int afl_idx)
                 ht_original temp = {0};
                 ht_original *TMP, *TMPP;
                 void* buff;
-                printf("93\n");
-                printf("SHOWING: hash %d %d\n", 3, uc->addrs->entries[3].count);
-                ht_original *ptr = &uc->addrs->entries[3];
-                while (ptr!=NULL)
-                {
-                    printf("PTR ADDR : 0x%llx\n", ptr);
-                    for (size_t j = 0; j < ptr->count; j++)
-                    {
-                        printf("SHOWING: hash %d %d SHOWING: addr: 0x%llx \n",3, ptr->count, ptr->addrs[j]);
-
-                    }
-                    printf("\n");
-                    ptr = ptr->next;
-                    
-                }
+               
                 do
                 {
-                    printf("%d\n", curr_new->index);
 
                     TMP = (curr_new+1);
                     if (TMP->next==NULL)
@@ -117,26 +101,47 @@ void coverage_handler(struct uc_struct* uc, int afl_idx)
                     }
                     else
                     {
+                
                         temp = uc->addrs->entries[curr_new->index];
-
                         TMPP = uc->addrs->entries[curr_new->index].next;
                         temp.next = TMP;
                         temp.next->next = TMPP;
                         uc->addrs->entries[curr_new->index] = temp;
+
+
                     }
                    
                     curr_new = (Header *) offset2ptr(curr_new->next, shm_tmp);
+                
 
-                } while (curr_new!=NULL&&curr_new->bitseq != 0);
+                } while (curr_new!=NULL&&curr_new->next!=-1);
+
+                   
+                    
                 printf("114\n");
 
                 buf = uc->shm_ptr;
                 uc->shm_ptr = shm_tmp;
+              
                 ret = addEntry(uc->addrs->entries[3],uc, true,3);
 
                 if (ret.next != NULL) 
                 {
                     uc->addrs->entries[3] = ret;
+                    printf("SHOWING: hash %d %d\n", 3, uc->addrs->entries[3].count);
+                    ht_original *ptr = &uc->addrs->entries[3];
+                    while (ptr!=NULL)
+                    {
+                        printf("PTR ADDR : 0x%llx\n", ptr);
+                        for (size_t j = 0; j < ptr->count; j++)
+                        {
+                            printf("SHOWING: hash %d %d SHOWING: addr: 0x%llx \n",3, ptr->count, ptr->addrs[j]);
+
+                        }
+                        printf("\n");
+                        ptr = ptr->next;
+                        
+                    }
                     shmdt(buf);
                 }
                 else
@@ -145,10 +150,7 @@ void coverage_handler(struct uc_struct* uc, int afl_idx)
                     exit(EXIT_FAILURE);
                 }
                
-                while(1)
-                {
-                    int qq = 1;
-                }
+                
             }
         }
         uc->addrs->entries[3].addrs[uc->addrs->entries[3].count] = uc->address;  //uc->addrs->entries[65535].original.addrs[0]
@@ -164,7 +166,7 @@ void coverage_output(struct uc_struct* uc)
     if (uc->afl_cov==1)
     {
         printf("REACHED\n");
-        /*
+        
         for (size_t i = 0; i < 65536; i++)
         {
             if (uc->addrs->entries[i].next!=0)
@@ -185,7 +187,7 @@ void coverage_output(struct uc_struct* uc)
                 }
                 continue;
             }
-            if(uc->addrs->entries[3].count>0){
+            if(uc->addrs->entries[i].count>0){
                 printf("SHOWING: hash %d %d\n", i, uc->addrs->entries[i].count);
                 for (size_t j = 0; j < uc->addrs->entries[i].count; j++)
                 {
@@ -196,7 +198,7 @@ void coverage_output(struct uc_struct* uc)
                 
             }    
         }  
-        */
+        
         /*        
         time_t now = time(NULL);
         if (now-uc->addrs->time>=uc->afl_tmout)
