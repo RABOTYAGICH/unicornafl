@@ -125,6 +125,7 @@ static int tcg_cpu_exec(struct uc_struct *uc, CPUArchState *env)
 static bool tcg_exec_all(struct uc_struct* uc)
 {
     int r;
+    bool finish = false;
 
     while (!uc->exit_request) {
         CPUState *cpu = uc->cpu;
@@ -142,6 +143,7 @@ static bool tcg_exec_all(struct uc_struct* uc)
                 uc->stop_request = false;
             } else if (uc->stop_request) {
                 printf(">>> got STOP request!!!\n");
+                finish = true;
                 break;
             }
 
@@ -150,6 +152,7 @@ static bool tcg_exec_all(struct uc_struct* uc)
                 // printf(">>> invalid memory accessed, STOP = %u!!!\n", env->invalid_error);
                 uc->invalid_addr = env->invalid_addr;
                 uc->invalid_error = env->invalid_error;
+                finish = true;
                 break;
             }
 
@@ -160,13 +163,8 @@ static bool tcg_exec_all(struct uc_struct* uc)
             }
             if (r == EXCP_HLT) {
                 coverage_output(uc);
-               
-                
-                printf(">>> got HLT!!!\n");
-                printf("HLT: \n");
-                
-                
-
+                finish = true;             
+            
                 break;
             }
         } else if (cpu->stop || cpu->stopped) {
@@ -175,6 +173,7 @@ static bool tcg_exec_all(struct uc_struct* uc)
         }
     }
     uc->exit_request = 0;
+    return finish;
 
 }
 
