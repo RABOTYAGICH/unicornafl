@@ -4,7 +4,7 @@
 
 
 #define SHM_ID 7
-#define MAX_MEM 29572904
+#define MAX_MEM 9963990
 #define ARR_SIZE 16
 #define BITSEQ 536870911
 

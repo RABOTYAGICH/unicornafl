@@ -45,8 +45,6 @@ void *shmalloc(int id, size_t *size, void *shmptr, size_t shm_size, bool new, in
     Header *first, *curr, *best_fit;
     size_t free_size, best_block_size;
     int one, two;
-    printf("%d %d %d\n", id, shm_size, new);
-    printf("0x%llu\n", uc->last);
 
     // Verify pointers
     if (shmptr == NULL) {
@@ -115,7 +113,7 @@ void *shmalloc(int id, size_t *size, void *shmptr, size_t shm_size, bool new, in
                 uc->last = (Header *)(shmptr+uc->last->prev);
                 
                 uc->last = (Header *) offset2ptr(uc->last->next, shmptr);
-
+                
                 uc->last->next=-1;
             }
             if (uc->last!=NULL)
@@ -160,6 +158,7 @@ void *shmalloc(int id, size_t *size, void *shmptr, size_t shm_size, bool new, in
         best_fit->id = id;
         best_fit->is_free = 0;
         best_fit->index = index;
+        printf("best_fit->index %d\n",best_fit->index);
         one = free_size - (best_fit->size*2);
 
 
@@ -182,7 +181,7 @@ void *shmalloc(int id, size_t *size, void *shmptr, size_t shm_size, bool new, in
         else {
             pthread_mutex_unlock(&(first->mutex));
             uc->last = best_fit;
-
+            uc->last->bitseq = 0x777;
             return NULL;
         }
 

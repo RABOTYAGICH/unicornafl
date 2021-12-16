@@ -1,7 +1,7 @@
 #define SHM_ENV_VAR2 "__AFL_SHM_ID2"
 #include <pthread.h>
 #include "uc_priv.h"
-#define MAX_MEM 29572904
+#define MAX_MEM 9963990
 
 
 

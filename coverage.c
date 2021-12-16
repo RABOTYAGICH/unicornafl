@@ -8,7 +8,7 @@ ht_original addEntry(ht_original entry, struct uc_struct* uc, bool ovf, int inde
 {
     ht_original ret = {0};
     size_t dbl_sizeHt = sizeof(ht_original);
-
+    printf("addEntry\n");
     ht_original *tmp = (ht_original*) shmalloc(uc->addrs->block_id, &dbl_sizeHt, uc->shm_ptr, MAX_MEM,ovf,index, uc);
     if (tmp==NULL)
     {
@@ -23,6 +23,22 @@ ht_original addEntry(ht_original entry, struct uc_struct* uc, bool ovf, int inde
     return ret;
 
 }
+void start_coverage(struct uc_struct* uc)
+{
+   
+
+
+    char *tmout_r = getenv("AFL_COVERAGE_TMOUT");
+    uc->cur_size = MAX_MEM;
+    uc->afl_tmout = atoi(tmout_r);;
+
+    size_t dbl_sizeD = sizeof(ht);
+    uc->addrs = (ht *) shmalloc(0, &dbl_sizeD, uc->shm_ptr, MAX_MEM,false,-1, uc);
+
+
+    uc->addrs->time = time(NULL);
+
+}
 
 void coverage_handler(struct uc_struct* uc, int afl_idx)
 {
@@ -32,19 +48,18 @@ void coverage_handler(struct uc_struct* uc, int afl_idx)
   
     if (uc->address!=0)
     {
-     // printf("ADDRESSZ 0x%llx AFL_IDX %d\n", uc->address, afl_idx);
-         if(uc->addrs->entries[afl_idx].count==16)
+         if(uc->addrs->entries[3].count==16)
         {
-            ht_original ret = addEntry(uc->addrs->entries[afl_idx],uc,false,afl_idx);
+            ht_original ret = addEntry(uc->addrs->entries[3],uc,false,3);
             if (ret.next != NULL) 
             {
-                uc->addrs->entries[afl_idx] = ret;
+                uc->addrs->entries[3] = ret;
             }
              else  
             { 
                 void *buf;
                 void *shm_tmp;
-
+                printf("OVERFLOW\n");
                 Header *first, *curr_new;
                 int shm_id;
                 uc->size_next += MAX_MEM;
@@ -55,6 +70,7 @@ void coverage_handler(struct uc_struct* uc, int afl_idx)
                     exit(EXIT_FAILURE);
                 }
 
+                printf("73\n");
 
                 if ((shm_tmp = shmat(shm_id, NULL, 0)) == (void *) -1) {
                             printf("errno %d\n",errno );
@@ -65,6 +81,7 @@ void coverage_handler(struct uc_struct* uc, int afl_idx)
                 memcpy(shm_tmp,uc->shm_ptr, uc->cur_size);
                 uc->cur_size+=MAX_MEM;
                 first = curr_new = (Header *) shm_tmp;
+                printf("first %d\n", curr_new->index);
 
                 curr_new = (Header *) offset2ptr(curr_new->next, shm_tmp);
                 
@@ -74,9 +91,25 @@ void coverage_handler(struct uc_struct* uc, int afl_idx)
                 ht_original temp = {0};
                 ht_original *TMP, *TMPP;
                 void* buff;
-                
+                printf("93\n");
+                printf("SHOWING: hash %d %d\n", 3, uc->addrs->entries[3].count);
+                ht_original *ptr = &uc->addrs->entries[3];
+                while (ptr!=NULL)
+                {
+                    printf("PTR ADDR : 0x%llx\n", ptr);
+                    for (size_t j = 0; j < ptr->count; j++)
+                    {
+                        printf("SHOWING: hash %d %d SHOWING: addr: 0x%llx \n",3, ptr->count, ptr->addrs[j]);
+
+                    }
+                    printf("\n");
+                    ptr = ptr->next;
+                    
+                }
                 do
                 {
+                    printf("%d\n", curr_new->index);
+
                     TMP = (curr_new+1);
                     if (TMP->next==NULL)
                     {
@@ -93,18 +126,17 @@ void coverage_handler(struct uc_struct* uc, int afl_idx)
                     }
                    
                     curr_new = (Header *) offset2ptr(curr_new->next, shm_tmp);
-                } while (curr_new!=NULL&&curr_new->next!=-1);
-                    
-                
-               
-                
+
+                } while (curr_new!=NULL&&curr_new->bitseq != 0);
+                printf("114\n");
+
                 buf = uc->shm_ptr;
                 uc->shm_ptr = shm_tmp;
-                ret = addEntry(uc->addrs->entries[afl_idx],uc, true,afl_idx);
+                ret = addEntry(uc->addrs->entries[3],uc, true,3);
 
                 if (ret.next != NULL) 
                 {
-                    uc->addrs->entries[afl_idx] = ret;
+                    uc->addrs->entries[3] = ret;
                     shmdt(buf);
                 }
                 else
@@ -112,39 +144,60 @@ void coverage_handler(struct uc_struct* uc, int afl_idx)
                     fprintf(stderr, "Failed to get a shared memory segment.\n");
                     exit(EXIT_FAILURE);
                 }
+               
+                while(1)
+                {
+                    int qq = 1;
+                }
             }
         }
-        uc->addrs->entries[afl_idx].addrs[uc->addrs->entries[afl_idx].count] = uc->address;  //uc->addrs->entries[65535].original.addrs[0]
-        uc->addrs->entries[afl_idx].count+=1;
+        uc->addrs->entries[3].addrs[uc->addrs->entries[3].count] = uc->address;  //uc->addrs->entries[65535].original.addrs[0]
+        uc->addrs->entries[3].count+=1;
         uc->address=0;
     }
   }
 }
 
-void start_coverage(struct uc_struct* uc)
-{
-   
-
-
-    char *tmout_r = getenv("AFL_COVERAGE_TMOUT");
-
-    uc->afl_tmout = atoi(tmout_r);;
-
-    size_t dbl_sizeD = sizeof(ht);
-    uc->addrs = (ht *) shmalloc(0, &dbl_sizeD, uc->shm_ptr, MAX_MEM,false,-1, uc);
-
-
-    uc->addrs->time = time(NULL);
-
-}
 
 void coverage_output(struct uc_struct* uc)
 {
     if (uc->afl_cov==1)
     {
-                    /* code */
+        printf("REACHED\n");
+        /*
+        for (size_t i = 0; i < 65536; i++)
+        {
+            if (uc->addrs->entries[i].next!=0)
+            {
+                printf("SHOWING: hash %d %d\n", i, uc->addrs->entries[i].count);
+                ht_original *ptr = &uc->addrs->entries[i];
+                while (ptr!=NULL)
+                {
+                    printf("PTR ADDR : 0x%llx\n", ptr);
+                    for (size_t j = 0; j < ptr->count; j++)
+                    {
+                        printf("SHOWING: hash %d %d SHOWING: addr: 0x%llx \n",i, ptr->count, ptr->addrs[j]);
+
+                    }
+                    printf("\n");
+                    ptr = ptr->next;
+                    
+                }
+                continue;
+            }
+            if(uc->addrs->entries[3].count>0){
+                printf("SHOWING: hash %d %d\n", i, uc->addrs->entries[i].count);
+                for (size_t j = 0; j < uc->addrs->entries[i].count; j++)
+                {
+                    printf("SHOWING: hash %d %d SHOWING: addr: 0x%llx \n",i, uc->addrs->entries[i].count, uc->addrs->entries[i].addrs[j]);
+                    //printf("SHOWING: addr: %d\n", uc->addrs->entries[i].addrs[j]);
+
+                }
                 
-                
+            }    
+        }  
+        */
+        /*        
         time_t now = time(NULL);
         if (now-uc->addrs->time>=uc->afl_tmout)
         {
@@ -167,5 +220,6 @@ void coverage_output(struct uc_struct* uc)
             }
             uc->addrs->time = time(NULL);
         }
+        */
     }
 }

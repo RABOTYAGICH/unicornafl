@@ -141,7 +141,6 @@ static bool tcg_exec_all(struct uc_struct* uc)
                 // reset stop_request
                 uc->stop_request = false;
             } else if (uc->stop_request) {
-                printf(">>> got STOP request!!!\n");
                 break;
             }
 
@@ -153,7 +152,6 @@ static bool tcg_exec_all(struct uc_struct* uc)
                 break;
             }
 
-            printf(">>> stop with r = %x, HLT=%x\n", r, EXCP_HLT);
             if (r == EXCP_DEBUG) {
                 cpu_handle_guest_debug(cpu);
                 break;
@@ -162,8 +160,6 @@ static bool tcg_exec_all(struct uc_struct* uc)
                 coverage_output(uc);
                
                 
-                printf(">>> got HLT!!!\n");
-                printf("HLT: \n");
                 
                 
 
