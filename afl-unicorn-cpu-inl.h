@@ -160,13 +160,23 @@ static void afl_setup(struct uc_struct* uc) {
     
     if (uc->afl_cov==1)
     {
-      char *str_id = getenv(SHM_ENV_VAR2);
 
+      
+      char *str_id = getenv(SHM_ENV_VAR2);
+      
 
       id_shm = atoi(str_id);
+      
+      pthread_mutex_t mutex;
+      pthread_mutex_init(&mutex, NULL);
+      pthread_mutex_lock(&mutex);
+      printf("ID PRIMARY%d\n", id_shm);
+      pthread_mutex_unlock(&mutex);
+      pthread_mutex_destroy(&mutex);
+      
       uc->shm_ptr = shmat(id_shm, NULL, 0);
       start_coverage(uc);
-
+      uc->id_sh = id_shm;
      
     }
 

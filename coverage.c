@@ -34,7 +34,7 @@ void start_coverage(struct uc_struct* uc)
     size_t dbl_sizeD = sizeof(ht);
     uc->addrs = (ht *) shmalloc(0, &dbl_sizeD, uc->shm_ptr, MAX_MEM,false,-1, uc);
 
-
+    
     uc->addrs->time = time(NULL);
 
 }
@@ -47,6 +47,7 @@ void coverage_handler(struct uc_struct* uc, int afl_idx)
   
     if (uc->address!=0)
     {
+        
          if(uc->addrs->entries[3].count==16)
         {
             ht_original ret = addEntry(uc->addrs->entries[3],uc,false,3);
@@ -69,7 +70,7 @@ void coverage_handler(struct uc_struct* uc, int afl_idx)
                     exit(EXIT_FAILURE);
                 }
 
-                printf("73\n");
+                printf("shm_id: %d\n", shm_id);
 
                 if ((shm_tmp = shmat(shm_id, NULL, 0)) == (void *) -1) {
                             printf("errno %d\n",errno );
@@ -77,6 +78,8 @@ void coverage_handler(struct uc_struct* uc, int afl_idx)
                     fprintf(stderr, "Failed to attach to our shared memory segment.\n");
                     exit(EXIT_FAILURE);
                 }
+                
+
                 memcpy(shm_tmp,uc->shm_ptr, uc->cur_size);
                 uc->cur_size+=MAX_MEM;
                 first = curr_new = (Header *) shm_tmp;
@@ -84,13 +87,27 @@ void coverage_handler(struct uc_struct* uc, int afl_idx)
 
                 curr_new = (Header *) offset2ptr(curr_new->next, shm_tmp);
                 
-
                 uc->addrs = (ht *)(first+1);
 
                 ht_original temp = {0};
                 ht_original *TMP, *TMPP;
                 void* buff;
-               
+                /*
+                printf("SHOWING: hash %d %d\n", 3, uc->addrs->entries[3].count);
+                    ht_original *ptr = &uc->addrs->entries[3];
+                    while (ptr!=NULL)
+                    {
+                        printf("PTR ADDR : 0x%llx\n", ptr);
+                        for (size_t j = 0; j < ptr->count; j++)
+                        {
+                            printf("SHOWING: hash %d %d SHOWING: addr: 0x%llx \n",3, ptr->count, ptr->addrs[j]);
+
+                        }
+                        printf("\n");
+                        ptr = ptr->next;
+                        
+                    }
+                    */
                 do
                 {
 
@@ -116,10 +133,25 @@ void coverage_handler(struct uc_struct* uc, int afl_idx)
 
                 } while (curr_new!=NULL&&curr_new->next!=-1);
 
-                   
-                    
-                printf("114\n");
+                   pthread_mutex_t mutex;
+      pthread_mutex_init(&mutex, NULL);
+      pthread_mutex_lock(&mutex); 
+                FILE* file;
 
+                char *tmout_r = "/home/q/Documents/qqqq.txt";
+                file = fopen(tmout_r, "w");    
+                if (file != -1) 
+                {
+                    printf("wrote %d\n", shm_id);
+                    fprintf(file,"%d\n", shm_id);
+                }
+
+                fclose (file);
+                
+                printf("114\n");
+      pthread_mutex_unlock(&mutex);
+      pthread_mutex_destroy(&mutex);
+      
                 buf = uc->shm_ptr;
                 uc->shm_ptr = shm_tmp;
               
@@ -128,21 +160,12 @@ void coverage_handler(struct uc_struct* uc, int afl_idx)
                 if (ret.next != NULL) 
                 {
                     uc->addrs->entries[3] = ret;
-                    printf("SHOWING: hash %d %d\n", 3, uc->addrs->entries[3].count);
-                    ht_original *ptr = &uc->addrs->entries[3];
-                    while (ptr!=NULL)
-                    {
-                        printf("PTR ADDR : 0x%llx\n", ptr);
-                        for (size_t j = 0; j < ptr->count; j++)
-                        {
-                            printf("SHOWING: hash %d %d SHOWING: addr: 0x%llx \n",3, ptr->count, ptr->addrs[j]);
+                   
+                shmdt(buf);
+                   int result = shmctl(uc->id_sh, IPC_RMID, NULL);
+                   printf("RWWWWWWWWWWW %d\n", result);
+                    uc->id_sh = shm_id;
 
-                        }
-                        printf("\n");
-                        ptr = ptr->next;
-                        
-                    }
-                    shmdt(buf);
                 }
                 else
                 {
@@ -165,8 +188,10 @@ void coverage_output(struct uc_struct* uc)
 {
     if (uc->afl_cov==1)
     {
-        printf("REACHED\n");
         
+        printf("REACHED\n");
+       
+        /*
         for (size_t i = 0; i < 65536; i++)
         {
             if (uc->addrs->entries[i].next!=0)
@@ -198,6 +223,7 @@ void coverage_output(struct uc_struct* uc)
                 
             }    
         }  
+        */
         
         /*        
         time_t now = time(NULL);

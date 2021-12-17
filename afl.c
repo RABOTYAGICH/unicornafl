@@ -31,7 +31,32 @@ uc_afl_ret uc_afl_forkserver_start(uc_engine *uc, uint64_t *exits, size_t exit_c
     The cached blocks, in the next child, therefore would have no exit set and run forever.
     Also it's nice to have multiple exits, so let's just do it right.
     */
+    pthread_mutex_t mutex;
+      pthread_mutex_init(&mutex, NULL);
+      pthread_mutex_lock(&mutex);
+        FILE* file;
+      int number;
+     
+      char *tmout_r = "/home/q/Documents/qqqq.txt";
+      file = fopen(tmout_r, "r");  
+      //file = fopen ("myfile.txt","r");
+      printf("FILE ^^^%d\n", file);
 
+      if (file!=NULL) 
+      {
+
+      fscanf(file, "%d", &number);
+      printf("number: %d", number);
+
+      fclose (file);
+      }
+      else{
+        printf("FAILL\n");
+      }
+      pthread_mutex_unlock(&mutex);
+      pthread_mutex_destroy(&mutex);
+      
+    printf("QQQQQQQQQQQQQQ");
     if (!uc) {
         fprintf(stderr, "[!] Unicorn Engine passed to uc_afl_fuzz is NULL!\n");
         return UC_AFL_RET_ERROR;
@@ -258,7 +283,7 @@ uc_afl_ret uc_afl_fuzz(
     }
 #endif
     uc->address=0;
-
+    
     // 0 means never stop child in persistence mode.
     uint32_t i;
     for (i = 0; persistent_iters == 0 || i < persistent_iters; i++) {
